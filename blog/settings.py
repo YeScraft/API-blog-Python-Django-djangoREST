@@ -15,6 +15,8 @@ import os
 import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+import django_heroku
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -22,8 +24,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'ieztj=$r7e=_#7%4ldq)=f_)^k11%(s@i7-mve5+c=kkm@2w3p'
-
+# SECRET_KEY = 'ieztj=$r7e=_#7%4ldq)=f_)^k11%(s@i7-mve5+c=kkm@2w3p'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'please-set-secret-key-through-env')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -123,5 +125,52 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
+django_heroku.settings(locals())
+
+def get_cache():
+    environment_ready = all(
+        os.environ.get(f'MEMCACHIER_{key}', False)
+        for key in ['SERVERS', 'USERNAME', 'PASSWORD']
+    )
+    if not environment_ready:
+        cache = {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': '127.0.0.1:11211',
+        }
+    else:
+        servers = os.environ['MEMCACHIER_SERVERS']
+        username = os.environ['MEMCACHIER_USERNAME']
+        password = os.environ['MEMCACHIER_PASSWORD']
+        cache = {
+            'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
+            'TIMEOUT': 300,
+            'LOCATION': servers,
+            'OPTIONS': {
+                'binary': True,
+                'username': username,
+                'password': password,
+                'behaviors': {
+                    # Enable faster IO
+                    'no_block': True,
+                    'tcp_nodelay': True,
+                    # Keep connection alive
+                    'tcp_keepalive': True,
+                    # Timeout settings
+                    'connect_timeout': 2000,  # ms
+                    'send_timeout': 750 * 1000,  # us
+                    'receive_timeout': 750 * 1000,  # us
+                    '_poll_timeout': 2000,  # ms
+                    # Better failover
+                    'ketama': True,
+                    'remove_failed': 1,
+                    'retry_timeout': 2,
+                    'dead_timeout': 30,
+                }
+            }
+        }
+    return {'default': cache}
+
+
 STATIC_URL = '/static/'
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
