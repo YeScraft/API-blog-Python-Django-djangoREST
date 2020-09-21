@@ -12,10 +12,9 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 
 from pathlib import Path
 import os
-import dj_database_url
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-import django_heroku
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,13 +23,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = 'ieztj=$r7e=_#7%4ldq)=f_)^k11%(s@i7-mve5+c=kkm@2w3p'
-SECRET_KEY = os.environ.get('SECRET_KEY')
+
+
+SECRET_KEY = 'ieztj=$r7e=_#7%4ldq)=f_)^k11%(s@i7-mve5+c=kkm@2w3p'
+
+# Для HEROKU
+# SECRET_KEY = os.environ.get('SECRET_KEY')
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+# Для HEROKU
+# ALLOWED_HOSTS = ['*']
 
+ALLOWED_HOSTS = []
 
 # Application definition
 
@@ -79,14 +85,16 @@ WSGI_APPLICATION = 'blog.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
-DATABASES = {'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))}
+# Для HEROKU
+# import dj_database_url
+# DATABASES = {'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))}
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
 
 # Password validation
@@ -128,4 +136,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# Для HEROKU
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
